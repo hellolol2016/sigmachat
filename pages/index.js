@@ -5,7 +5,7 @@ import { Box, Center, useRadioGroup, VStack, Text } from "@chakra-ui/react";
 import { useState, useEffect,useRef } from "react";
 
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import {
   addDoc,
   collection,
@@ -31,10 +31,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const firestore = getFirestore(app);
-
 function ChatMessage(props) {
   const { text, uid, photoURL } = props.message;
-  const messageClass = uid === auth.currentUser.uid ? "send" : "received";
+  const messageClass = uid === auth.currentUser?.uid ? "send" : "received";
   return (
     <Box>
       <img src={photoURL}></img>
@@ -43,20 +42,20 @@ function ChatMessage(props) {
   );
 }
 function SignIn() {
-  const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
+  const signInWithGoogle = async () => {
     await signInWithPopup(auth, provider)
       .then((u) => {
-        user = u;
+        console.log(u)
       })
-      .catch((error) => {});
+      .catch((error) => {console.error(error)});
   };
   return <button onClick={signInWithGoogle}>Sign in wigh Google</button>;
 }
 
 function SignOut() {
   return (
-    auth.currentUser && <button onClick={() => auth.signOut()}>Sign out</button>
+    auth.currentUser && <button onClick={() => signOut(auth).then(()=>{console.log("rekt")})}>Sign out</button>
   );
 }
 
@@ -94,7 +93,10 @@ function ChatRoom() {
 
 console.log("objecht") 
   return (
-    <VStack>
+<>
+   <SignOut /> 
+      
+      <VStack>
       <Box>
         {messages &&
           messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
@@ -110,9 +112,12 @@ console.log("objecht")
         <button type="submit">GO</button>
       </form>
     </VStack>
+    </>
   );
 }
 
 export default function Home() {
+
+const [user] = useAuthState(auth);
   return <Box>{auth.currentUser ? <ChatRoom /> : <SignIn />}</Box>;
 }
