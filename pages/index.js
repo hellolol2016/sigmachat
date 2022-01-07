@@ -91,7 +91,6 @@ function ChatRoom() {
     dummy.current.scrollIntoView({ behavior: 'smooth' });
   }
 
-console.log("objecht") 
   return (
 <>
    <SignOut /> 
