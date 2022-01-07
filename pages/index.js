@@ -1,24 +1,22 @@
 import Head from "next/head";
 import Image from "next/image";
 import styles from "../styles/Home.module.css";
-import { Box, Center, useRadioGroup, VStack } from "@chakra-ui/react";
-import { useState, useEffect } from "react";
+import { Box, Center, useRadioGroup, VStack, Text } from "@chakra-ui/react";
+import { useState, useEffect,useRef } from "react";
 
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import {
+  addDoc,
   collection,
   doc,
   getDocs,
   getFirestore,
   onSnapshot,
   query,
+  serverTimestamp
 } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
-import {
-  useCollectionData,
-  useCollectionOnce,
-} from "react-firebase-hooks/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDQn6G5L2UHoe464ABRlpfy7ea9EBfXOfs",
@@ -35,13 +33,13 @@ const firestore = getFirestore(app);
 
 function ChatMessage(props) {
   const { text, uid, photoURL } = props.message;
-  const messageClass = uid === auth.currentUser.uid ? 'send' : 'received';
-  return <Box>
-   <img src={photoURL} ></img>
- <Text className={messageClass}>
-      {text}
-</Text>   
-  </Box>;
+  const messageClass = uid === auth.currentUser.uid ? "send" : "received";
+  return (
+    <Box>
+      <img src={photoURL}></img>
+      <Text className={messageClass}>{text}</Text>
+    </Box>
+  );
 }
 function SignIn() {
   const signInWithGoogle = async () => {
@@ -61,33 +59,59 @@ function SignOut() {
   );
 }
 
-export default function Home() {
+function ChatRoom() {
+  const dummy = useRef();
+
+
   const [messages, setMessages] = useState([]);
   const [user, loading, error] = useAuthState(auth);
-
+  const [formValue, setFormValue] = useState("");
   useEffect(() => {
     async function getMessages() {
       const q = query(collection(firestore, "messages"));
       onSnapshot(q, (qS) => {
-        setMessages(qS.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
-      }
-      );
+        setMessages(qS.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+      });
     }
 
     getMessages();
   }, []);
 
-  console.log(messages);
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    const { uid, photoURL } = auth.currentUser;
+
+    await addDoc(collection(firestore, 'messages'), {
+      text: formValue,
+      createdAt: serverTimestamp(),
+      uid,
+      photoURL
+    })
+    setFormValue('');
+    dummy.current.scrollIntoView({ behavior: 'smooth' });
+  }
+
+
   return (
-    <Box>
-      {user ? (
-        <Box>
-          {messages &&
-            messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
-        </Box>
-      ) : (
-        <SignIn />
-      )}
-    </Box>
+    <VStack>
+      <Box>
+        {messages &&
+          messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
+      <div ref={dummy}></div>
+      
+      </Box>
+      
+      <form onSubmit={sendMessage}>
+        <input
+          value={formValue}
+          onChange={(e) => setFormValue(e.target.value)}
+        />
+        <button type="submit">GO</button>
+      </form>
+    </VStack>
   );
+}
+
+export default function Home() {
+  return <Box>{auth.currentUser ? <ChatRoom /> : <SignIn />}</Box>;
 }
