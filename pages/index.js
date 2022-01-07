@@ -13,6 +13,7 @@ import {
   getDocs,
   getFirestore,
   onSnapshot,
+  orderBy,
   query,
   serverTimestamp
 } from "firebase/firestore";
@@ -68,7 +69,7 @@ function ChatRoom() {
   const [formValue, setFormValue] = useState("");
   useEffect(() => {
     async function getMessages() {
-      const q = query(collection(firestore, "messages"));
+      const q = query(collection(firestore, "messages"),orderBy("createdAt"));
       onSnapshot(q, (qS) => {
         setMessages(qS.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
       });
@@ -91,7 +92,7 @@ function ChatRoom() {
     dummy.current.scrollIntoView({ behavior: 'smooth' });
   }
 
-
+console.log("objecht") 
   return (
     <VStack>
       <Box>
