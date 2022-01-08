@@ -1,11 +1,26 @@
 import Head from "next/head";
 import Image from "next/image";
 import styles from "../styles/Home.module.css";
-import { Box, Center, useRadioGroup, VStack, Text } from "@chakra-ui/react";
-import { useState, useEffect,useRef } from "react";
+import {
+  Box,
+  Center,
+  useRadioGroup,
+  VStack,
+  Text,
+  Button,
+  HStack,
+  Input,
+  Textarea,
+} from "@chakra-ui/react";
+import { useState, useEffect, useRef } from "react";
 
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+} from "firebase/auth";
 import {
   addDoc,
   collection,
@@ -15,7 +30,7 @@ import {
   onSnapshot,
   orderBy,
   query,
-  serverTimestamp
+  serverTimestamp,
 } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 
@@ -35,43 +50,74 @@ function ChatMessage(props) {
   const { text, uid, photoURL } = props.message;
   const messageClass = uid === auth.currentUser?.uid ? "send" : "received";
   return (
-    <Box>
-      <img src={photoURL}></img>
-      <Text className={messageClass}>{text}</Text>
+    <Box
+      m={3}
+      bg={uid === auth.currentUser?.uid ? "#495057" : "#403d39"}
+      borderRadius={5}
+      boxShadow={"rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px"}
+    >
+      <HStack>
+        <img src={photoURL}></img>
+        <Text className={messageClass}>{text}</Text>
+      </HStack>
     </Box>
   );
 }
 function SignIn() {
-    const provider = new GoogleAuthProvider();
+  const provider = new GoogleAuthProvider();
   const signInWithGoogle = async () => {
     await signInWithPopup(auth, provider)
       .then((u) => {
-        console.log(u)
+        console.log(u);
       })
-      .catch((error) => {console.error(error)});
+      .catch((error) => {
+        console.error(error);
+      });
   };
-  return <button onClick={signInWithGoogle}>Sign in wigh Google</button>;
+  return (
+    <Center>
+      <VStack>
+        <Text fontSize={"40"}>Sigma Chat</Text>
+        <Text>The superior alternative to our competitor, AlphaChat!</Text>
+        <Button m={"50"} onClick={signInWithGoogle}>
+          Sign in wigh Google
+        </Button>
+        <Image src={"/smgs.png"} height={"200"} width={"600"} mt={"20"}></Image>
+      </VStack>
+    </Center>
+  );
 }
 
 function SignOut() {
   return (
-    auth.currentUser && <button onClick={() => signOut(auth).then(()=>{console.log("rekt")})}>Sign out</button>
+    auth.currentUser && (
+      <Button
+        onClick={() =>
+          signOut(auth).then(() => {
+            console.log("rekt");
+          })
+        }
+      >
+        Sign out
+      </Button>
+    )
   );
 }
 
 function ChatRoom() {
   const dummy = useRef();
 
-
   const [messages, setMessages] = useState([]);
   const [user, loading, error] = useAuthState(auth);
   const [formValue, setFormValue] = useState("");
   useEffect(() => {
     async function getMessages() {
-      const q = query(collection(firestore, "messages"),orderBy("createdAt"));
+      const q = query(collection(firestore, "messages"), orderBy("createdAt"));
       onSnapshot(q, (qS) => {
         setMessages(qS.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
       });
+
+    dummy.current.scrollIntoView({ behavior: "smooth" });
     }
 
     getMessages();
@@ -81,42 +127,51 @@ function ChatRoom() {
     e.preventDefault();
     const { uid, photoURL } = auth.currentUser;
 
-    await addDoc(collection(firestore, 'messages'), {
+    await addDoc(collection(firestore, "messages"), {
       text: formValue,
       createdAt: serverTimestamp(),
       uid,
-      photoURL
-    })
-    setFormValue('');
-    dummy.current.scrollIntoView({ behavior: 'smooth' });
-  }
+      photoURL,
+    });
+    setFormValue("");
+    dummy.current.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
-<>
-   <SignOut /> 
-      
+    <>
+      <SignOut />
+
       <VStack>
-      <Box>
-        {messages &&
-          messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
-      <div ref={dummy}></div>
-      
-      </Box>
-      
-      <form onSubmit={sendMessage}>
-        <input
-          value={formValue}
-          onChange={(e) => setFormValue(e.target.value)}
-        />
-        <button type="submit">GO</button>
-      </form>
-    </VStack>
+        <Text fontSize={"30"}>SIGMACHAT</Text>
+        <Box
+          height={"80vh"}
+          width={"60vw"}
+          overflow={"scroll"}
+          overflowX={"hidden"}
+        >
+          {messages &&
+            messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
+          <div ref={dummy}></div>
+        </Box>
+
+        <form onSubmit={sendMessage}>
+          <HStack>
+            <Textarea
+              value={formValue}
+              onChange={(e) => setFormValue(e.target.value)}
+              placeholder="send a message!"
+              width={"40vw"}
+            resize={"vertical"}
+            />
+            <Button type="submit">GO</Button>
+          </HStack>
+        </form>
+      </VStack>
     </>
   );
 }
 
 export default function Home() {
-
-const [user] = useAuthState(auth);
+  const [user] = useAuthState(auth);
   return <Box>{auth.currentUser ? <ChatRoom /> : <SignIn />}</Box>;
 }
