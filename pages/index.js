@@ -54,7 +54,9 @@ function ChatMessage(props) {
       m={3}
       bg={uid === auth.currentUser?.uid ? "#495057" : "#403d39"}
       borderRadius={5}
-      boxShadow={"rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px"}
+      boxShadow={
+        "rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px"
+      }
     >
       <HStack>
         <img src={photoURL}></img>
@@ -117,7 +119,7 @@ function ChatRoom() {
         setMessages(qS.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
       });
 
-    dummy.current.scrollIntoView({ behavior: "smooth" });
+      dummy.current.scrollIntoView({ behavior: "smooth" });
     }
 
     getMessages();
@@ -161,7 +163,7 @@ function ChatRoom() {
               onChange={(e) => setFormValue(e.target.value)}
               placeholder="send a message!"
               width={"40vw"}
-            resize={"vertical"}
+              resize={"vertical"}
             />
             <Button type="submit">GO</Button>
           </HStack>
@@ -172,6 +174,20 @@ function ChatRoom() {
 }
 
 export default function Home() {
-  const [user] = useAuthState(auth);
-  return <Box>{auth.currentUser ? <ChatRoom /> : <SignIn />}</Box>;
+  return (
+    <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Sigmachat - the premiere chatting app" />
+        <meta name="author" content="Dennis Wang" />
+        <link rel="shortcut icon" href="/meagain.jpg" type="image/x-icon" />
+        <meta property="og:site_name" content="Sigmachat" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="/meagain.jpg" />
+        <title>SigmaChat</title>
+
+      </Head>
+      <Box>{auth.currentUser ? <ChatRoom /> : <SignIn />}</Box>
+    </>
+  );
 }
