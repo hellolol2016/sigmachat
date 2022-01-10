@@ -174,6 +174,8 @@ function ChatRoom() {
 }
 
 export default function Home() {
+  useAuthState(auth);
+  console.log(auth.currentUser)
   return (
     <>
       <Head>
