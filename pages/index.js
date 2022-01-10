@@ -118,26 +118,49 @@ function ChatRoom() {
       onSnapshot(q, (qS) => {
         setMessages(qS.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
       });
-
       dummy.current.scrollIntoView({ behavior: "smooth" });
     }
 
     getMessages();
   }, []);
 
+  useEffect(() => {
+    const listener = event => {
+      if (event.code === "Enter" || event.code === "NumpadEnter") {
+        console.log("Enter key was pressed. Run your function.");
+        event.preventDefault();
+        document.querySelector('#submit').click();
+      
+      }
+    };
+    document.addEventListener("keydown", listener);
+    return () => {
+      document.removeEventListener("keydown", listener);
+    };
+  }, []);
+
+
+  
   const sendMessage = async (e) => {
-    e.preventDefault();
+if(e){
+  e.preventDefault();
+  }
     const { uid, photoURL } = auth.currentUser;
 
-    await addDoc(collection(firestore, "messages"), {
-      text: formValue,
-      createdAt: serverTimestamp(),
-      uid,
-      photoURL,
-    });
+    if (formValue.length > 10) {
+      await addDoc(collection(firestore, "messages"), {
+        text: formValue,
+        createdAt: serverTimestamp(),
+        uid,
+        photoURL,
+      });
+    } else {
+      alert("Message must be longer than 10 characters")
+    }
     setFormValue("");
-    dummy.current.scrollIntoView({ behavior: "smooth" });
+    dummy?.current.scrollIntoView({ behavior: "smooth" });
   };
+
 
   return (
     <>
@@ -156,7 +179,7 @@ function ChatRoom() {
           <div ref={dummy}></div>
         </Box>
 
-        <form onSubmit={sendMessage}>
+        <form id="message-form" onSubmit={sendMessage}>
           <HStack>
             <Textarea
               value={formValue}
@@ -164,30 +187,34 @@ function ChatRoom() {
               placeholder="send a message!"
               width={"40vw"}
               resize={"vertical"}
+              id="message-input"
+
             />
-            <Button type="submit">GO</Button>
+            <Button type="submit" id="submit">GO</Button>
           </HStack>
         </form>
       </VStack>
+
     </>
   );
 }
 
 export default function Home() {
   useAuthState(auth);
-  console.log(auth.currentUser)
   return (
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Sigmachat - the premiere chatting app" />
+        <meta
+          name="description"
+          content="Sigmachat - the premiere chatting app"
+        />
         <meta name="author" content="Dennis Wang" />
         <link rel="shortcut icon" href="/meagain.jpg" type="image/x-icon" />
         <meta property="og:site_name" content="Sigmachat" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="/meagain.jpg" />
         <title>SigmaChat</title>
-
       </Head>
       <Box>{auth.currentUser ? <ChatRoom /> : <SignIn />}</Box>
     </>
